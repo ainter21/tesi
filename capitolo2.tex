@@ -145,13 +145,82 @@ Come si può notare dalla tabella 1, il ritardo è l’unico parametro che disti
 
 
 
-\subsection{Sed pulvinar placerat enim, a}
+\subsection{Dettagli implementativi}
 \label{sec:00456}
 
+Nelle pagine precedenti sono stati descritti i protocolli basati sui modelli SI e SIR utilizzati per la distribuzione di informazioni, senza parlare di come questi possano essere utilizzati in casi reali. Innanzitutto anti-entropy e rumor-mongering possono essere utilizzati in contemporanea sulla medesima rete: si suppone infatti che un protocollo basato sul modello SIR può eventualmente terminare senza che si sia ottenuta consistenza su tutta la rete. Per evitare che ciò accada, è possibile eseguire un algoritmo anti-entropy meno frequentemente.
 
 
-\section{Vivamus hendrerit imperdiet ex. Vivamus}
-\label{sec:123}
+\subsubsection{Valori multipli}
+
+È molto probabile che i protocolli devono lavorare con più che singoli valori, e quindi la comparazione può diventare molto onerosa. Molto spesso infatti, lavorando con database per esempio, il confronto diventa quasi completamente inutile perché gran parte dei dati sono simili. È possibile risolvere in parte questo problema utilizzando dei checksum calcolati a partire dalla copia del database contenuta nel nodo, ricalcolando ogni volta che quest’ultimo viene aggiornato. Il primo scambio tra nodi avviene attraverso il confronto dei relativi checksum, eseguendo il confronto completo dei database solo se si trovano in disaccordo. Purtroppo la computazione dei checksum tende ad essere molto spesso diversa se l’aggiornamento ai nodi arriva in momenti tanto diversi, quindi la rete tenderà comunque a dover confrontare i dati completi. Una soluzione più complessa prevede di definire un intervallo di tempo che sia sufficiente per far ricevere l’aggiornamento a tutti i nodi. Ogni nodo contiene una lista con gli aggiornamenti più recenti, all’interno di questo spazio di tempo, che viene scambiata ed utilizzata per aggiornare checksum e database. Solo nel caso di un ulteriore disaccordo, viene eseguito il confronto con l’intero database. È importante notare che la scelta dell’intervallo di tempo è cruciale per il funzionamento: se viene fatta in maniera sbagliata, i checksum tenderanno a differenziarsi, aumentando il traffico rendendolo superiore al traffico generato dai protocolli anti-entropy senza checksum.
+
+Un' ultima soluzione, che non prevede la scelta a priori di un intervallo di tempo, prevede la memorizzazione di un indice inverso del database basato sul timestamp. I nodi si scambiano gli aggiornamenti in ordine inverso di timestamp, ricalcolando i checksum fino ad ottenere un consistenza di questi ultimi. Non è comunque ottimale a causa del costo di mantenimento dell’indice inverso in ogni nodo.
+
+\subsubsection{Traffico generato}
+Un problema non trascurabile in casi reali è sicuramente il traffico che una rete può supportare. Questi protocolli prevedono che ad ogni round vengano inviati più messaggi contemporaneamente, rischiando quindi di sovraccaricare la rete. Demer aveva definito questo come connection limit, spiegando che definire un limite è necessario sia in caso di puh che di pull. Questa condizione porta però ad un significativo peggioramento dei protocolli che utilizzano lo stile pull, mentre push diventa migliore. Il protocollo Scuttlebutt [flowgossip] definisce alcuni rimedi a questa limitazione, specificando un metodo per determinare in modo dinamico il tasso massimo di traffico che un nodo può generare senza dover creare un sistema di backlog per gli aggiornamenti. 
+
+\subsubsection{Gestione dei fallimenti}
+Implementando i protocolli di gossip in contesti reali comporta il rischio di possibili fallimenti per fattori esterni. Per fortuna, la perdita di messaggi non aggrava sull’esecuzione se non rallentando il raggiungimento della consistenza (alcuni round diventano inutili). Se alcuni nodi smettono di “funzionare”, gli scambi con questi diventano inutili e i protocolli rallentano la loro esecuzione. È comunque auspicabile mantenere lo stato attivo degli endpoint in modo da evitare questi inconvenienti.
+
+\section{Altri utilizzi dei protocolli epidemici}
+
+Negli scritti di Demers[1987], si supponeva che la rete fosse statica, ovvero il numero di nodi rimaneva fisso nel tempo. Inoltre ogni nodo aveva una visione totale, e quindi il grafo rappresentativo era completo. Infine il numero di macchine collegate era relativamente basso.
+Oggigiorno le reti sono molto più grandi, non sono completamente connesse e la lista di nodi direttamente connessi tra loro può variare per continue connessioni-disconnessioni. Questo sicuramente porta grandi vantaggi, come una maggior scalabilità. I protocolli epidemici possono essere adattati a questi grandi cambiamenti ed utilizzati per altri scopi, oltre alla distribuzione di informazioni. Esistono implementazioni dei protocolli epidemici per mantenere informazioni sullo stato di una rete peer-to-peer [membership], per rilevare errori e guasti[SWIMM], per implementare garbage collection[garbage\_collection], per calcolare informazioni di aggregazione[aggregation], …
+\subsection{Notazione}
+
+Si può definire un algoritmo di gossip generico, che si basa sulle implementazioni precedenti e descrive i vari momenti che devono essere tenuti in considerazione:
+\begin{itemize}
+    \item \textbf{inizializzazione}: un nodo viene definito con il suo stato iniziale. Viene impostato il timer
+    \item \textbf{allo scadere del timer}: il nodo sceglie un vicino, prepara il messaggio, lo invia al nodo scelto e reimposta il timer
+    \item \textbf{al ricevimento di un messaggio di richiesta}: il nodo prepara la risposta e la invia. Il nodo legge la richiesta e la elabora
+    \item \textbf{al ricevimento di un messaggio di risposta}: il nodo elabora la risposta.
+\end{itemize}
+
+Da queste situazioni si può notare come i metodi di elaborazione ed invio non sono stati implementati, ma questa operazione verrà fatta in seguito. 
+
+\subsection{Peer sampling}
+
+Per la gestione di reti dinamiche e di grandi dimensioni, il mantenimento di una lista contenente tutti i nodi è oneroso e per nulla efficiente. A causa della possibilità di fallimenti o di nuovi nodi, questa lista deve essere aggiornata frequentemente, per poi essere diffusa a tutti. 
+
+Per risolvere questo problema si utilizza un sottoinsieme della lista completa, scelta per ogni nodo in maniera casuale. Il mantenimento di questo sottoinsieme è sicuramente più gestibile. 
+Il metodo che si occupa di questo compito è detto getPeer().
+Di seguito la spiegazione di Newscast[Newscast], un protocollo di membership management (un altro modo per chiamare il peer sampling).
+
+\subsubsection{Newscast - non completo}
+Il protocollo Newscast funziona nel modo seguente: ad ogni round un nodo sceglie un vicino casuale tra la sua vista parziale di c elementi. Successivamente, stabilita la connessione, i nodi si inviano reciprocamente una la loro lista più il proprio indirizzo con il timestamp aggiornato. Infine stilano una lista dei c collegamenti più recenti, eliminando i restanti.
+L’algoritmo generico viene completato nel seguente modo:
+\begin{itemize}
+    \item \textbf{selectNeighbor()}: sceglie un noda dalla vista parziale
+    \item \textbf{prepareRequest()} e \textbf{prepareReply()}: ritorna la vista più il proprio indirizzo con il timestamp aggiornato
+    \item \textbf{merge()}: ritorna i più recenti collegamenti, scelti tra la propria vista e quella inviata dall’altro nodo
+\end{itemize}
+\subsection{Failure detection}
+La rilevazione di errori in sistemi distribuiti è un problema complesso[failure\_detection] principalmente perché molto spesso un processo può sembrare problematico anche se in realtà è semplicemente lento oppure la connessione è limitata. È necessario verificare con accuratezza che un nodo sia “guasto”, in modo da limitare il più possibile i falsi positivi mantenendo una conoscenza parziale dei nodi il più aggiornata possibile. 
+\subsubsection{Definizione del problema}
+Il protocollo SWIM [SWIM] offre un sistema di failure detection e, utilizzando il principio del gossip, un modo scalabile ed efficiente per distribuire le informazioni ricevute, mantenendo così aggiornata la lista dei membri che ogni nodo possiede. Si può dire quindi che combina sia il membership management e la failure detection.
+
+Il problema della scalabilità delle precedenti soluzioni è dovuto principalmente all’utilizzo della tecnica di heartbeating: un membro Mi è dichiarato guasto da un altro membro Mj quando non riceve messaggi “heartbeat” (messaggi con counter incrementale) per un determinato numero di periodi consecutivi [SWIM].
+\subsubsection{Algoritmo}
+L’algoritmo è realizzato in modo da dividere le componenti di failure detection e di membership update, senza utilizzare il metodo heartbeat[SWIM]:
+\begin{itemize}
+    \item \textbf{failure detection}: componente che rileva i guasti
+    \item \textbf{dissemination}: componente che invia informazioni riguardo i membri che entrano o lasciano la rete
+\end{itemize}
+
+\textbf{SWIM Failure Detector} Utilizza due parametri: $T$ indica il periodo del protocollo, mentre $k$ indica il numero di nodi appartenenti al gruppo che si occupa di contattare un nodo che non ha inviato risposte. Ad ogni round (di lunghezza $T$), un nodo $M_i$ sceglie un altro nodo $M_j$ dalla sua lista di vicini e invia un messaggio \textit{ping} e aspetta la risposta \textit{ack}. Se questa non arriva dopo un determinato periodo, inferiore a $T$, $M_i$ contatta i $k$ nodi scelti all’avvio del protocollo e chiede loro, attraverso un messaggio \textit{ping-req}, di contattare il nodo $M_j$. Se nessuno di questi nodi riceve risposta ed invia la conferma della salute del nodo $M_j$, questo viene dichiarato guasto nella lista di $M_i$, che si occuperà di distribuire la scoperta a tutta la rete.
+\textbf{Dissemination component} Se un nodo imposta un nodo come guasto, inizia a distribuire questa informazione a tutta la rete. La versione base del protocollo SWIM utilizza un sistema multicast, mentre una versione più robusta sfrutta il principio della diffusione delle epidemie, quindi i protocolli epidemici.
+\subsubsection{Riduzione dei fasi positivi}
+La versione base del protocollo SWIM rischia di aumentare il numero di nodi considerati guasti nel caso di perdita di pacchetti oppure per una temporanea disattivazione del nodo in questione. Per evitare questo problema viene introdotto protocollo  chiamato Suspicion protocol [SWIM]: quando un nodo Mi non riceve informazioni da un nodo Mj, ne dai nodi che lo aiutano a contattarlo, imposta il nodo $M_j$ come Sospetto. Se un altro nodo riceve questa informazione, marca nella sua lista il nodo come sospetto.
+
+Se un nodo riesce a contattare un nodo sospetto, comincia ad inviare un messaggio $Alive(M_j)$, il quale sovrascrive il sospetto di guasto. Quando un nodo rimane sospetto per un certo periodo di tempo, senza avere ulteriori informazioni, viene marcato come guasto in modo definitivo. Oltre allo stato di \textit{Suspect/Alive/Confirm}(guasto), viene associato anche un contatore, generato in modo da gestire la successione di messaggi e la loro eventuale sovrascrittura all’interno della lista.
+
+
+
+
+
+
+
 
 
 
