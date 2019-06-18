@@ -179,7 +179,7 @@ Si può definire un algoritmo di gossip generico, che si basa sulle implementazi
 
 Da queste situazioni si può notare come i metodi di elaborazione ed invio non sono stati implementati, ma questa operazione verrà fatta in seguito. 
 
-\subsection{Peer sampling}
+\section{Peer sampling}
 
 Per la gestione di reti dinamiche e di grandi dimensioni, il mantenimento di una lista contenente tutti i nodi è oneroso e per nulla efficiente. A causa della possibilità di fallimenti o di nuovi nodi, questa lista deve essere aggiornata frequentemente, per poi essere diffusa a tutti. 
 
@@ -187,21 +187,31 @@ Per risolvere questo problema si utilizza un sottoinsieme della lista completa, 
 Il metodo che si occupa di questo compito è detto getPeer().
 Di seguito la spiegazione di Newscast[Newscast], un protocollo di membership management (un altro modo per chiamare il peer sampling).
 
-\subsubsection{Newscast - non completo}
-Il protocollo Newscast funziona nel modo seguente: ad ogni round un nodo sceglie un vicino casuale tra la sua vista parziale di c elementi. Successivamente, stabilita la connessione, i nodi si inviano reciprocamente una la loro lista più il proprio indirizzo con il timestamp aggiornato. Infine stilano una lista dei c collegamenti più recenti, eliminando i restanti.
+\subsection{Definizione del problema}
+Il protocollo Newscast funziona nel modo seguente: ad ogni round un nodo sceglie un vicino casuale tra la sua vista parziale di $c$ elementi. Successivamente, stabilita la connessione, i nodi si inviano reciprocamente una la loro lista più il proprio indirizzo con il timestamp aggiornato. Infine stilano una lista dei $c$ collegamenti più recenti, eliminando i restanti.
 L’algoritmo generico viene completato nel seguente modo:
 \begin{itemize}
-    \item \textbf{selectNeighbor()}: sceglie un noda dalla vista parziale
-    \item \textbf{prepareRequest()} e \textbf{prepareReply()}: ritorna la vista più il proprio indirizzo con il timestamp aggiornato
-    \item \textbf{merge()}: ritorna i più recenti collegamenti, scelti tra la propria vista e quella inviata dall’altro nodo
+    \item \textbf{selectNeighbor()}: sceglie un nodo dalla vista parziale
+    \item \textbf{prepareRequest()} e \textbf{prepareReply()}: ritorna la vista parziale completa del nodo più il proprio indirizzo con il timestamp o un identificatore aggiornato
+    \item \textbf{mergeRequest()} e \textbf{mergeReply()}: ritorna i più recenti descrittori, scelti tra la propria vista e quella inviata dall’altro nodo
 \end{itemize}
-\subsection{Failure detection}
+Per entrare nel sistema, un nodo deve conoscere l'indirizzo di almeno un nodo già presente nella rete. Successivamente il nodo invia la propria vista parziale, ed aggiunge alla sua vista il nuovo nodo, con un identificatore aggiornato [Mont]. Utilizzando questo algoritmo, le viste parziali continueranno a cambiare, aggiornando gli identificatori di conseguenza. Se un nodo deve lasciare la rete, non serve che svolga azioni particolari. Il suo identificatore non verrà più aggiornato ed eventualmente diventerà vecchio a tal punto da non essere più salvato nelle viste dei nodi.
+
+Dall'analisi fatta in [wip-newscast], il protocollo possiede le seguenti proprietà:
+\begin{itemize}
+    \item \textbf{self-organizing}: l'algoritmo funziona senza necessità di controllo manuale anche se i nodi in modo casuale entrano oppure lasciano la rete
+    \item \textbf{effective}: l'informazione è distribuita in modo veloce e prevedibile
+    \item \textbf{scalable}: il protocollo non da problemi anche se il numero di nodi è elevato
+    \item \textbf{robust}: il sistema tollera danni anche gravi
+\end{itemize} 
+
+\section{Failure detection}
 La rilevazione di errori in sistemi distribuiti è un problema complesso[failure\_detection] principalmente perché molto spesso un processo può sembrare problematico anche se in realtà è semplicemente lento oppure la connessione è limitata. È necessario verificare con accuratezza che un nodo sia “guasto”, in modo da limitare il più possibile i falsi positivi mantenendo una conoscenza parziale dei nodi il più aggiornata possibile. 
-\subsubsection{Definizione del problema}
+\subsection{Definizione del problema}
 Il protocollo SWIM [SWIM] offre un sistema di failure detection e, utilizzando il principio del gossip, un modo scalabile ed efficiente per distribuire le informazioni ricevute, mantenendo così aggiornata la lista dei membri che ogni nodo possiede. Si può dire quindi che combina sia il membership management e la failure detection.
 
 Il problema della scalabilità delle precedenti soluzioni è dovuto principalmente all’utilizzo della tecnica di heartbeating: un membro Mi è dichiarato guasto da un altro membro Mj quando non riceve messaggi “heartbeat” (messaggi con counter incrementale) per un determinato numero di periodi consecutivi [SWIM].
-\subsubsection{Algoritmo}
+\subsection{Algoritmo}
 L’algoritmo è realizzato in modo da dividere le componenti di failure detection e di membership update, senza utilizzare il metodo heartbeat[SWIM]:
 \begin{itemize}
     \item \textbf{failure detection}: componente che rileva i guasti
@@ -210,14 +220,40 @@ L’algoritmo è realizzato in modo da dividere le componenti di failure detecti
 
 \textbf{SWIM Failure Detector} Utilizza due parametri: $T$ indica il periodo del protocollo, mentre $k$ indica il numero di nodi appartenenti al gruppo che si occupa di contattare un nodo che non ha inviato risposte. Ad ogni round (di lunghezza $T$), un nodo $M_i$ sceglie un altro nodo $M_j$ dalla sua lista di vicini e invia un messaggio \textit{ping} e aspetta la risposta \textit{ack}. Se questa non arriva dopo un determinato periodo, inferiore a $T$, $M_i$ contatta i $k$ nodi scelti all’avvio del protocollo e chiede loro, attraverso un messaggio \textit{ping-req}, di contattare il nodo $M_j$. Se nessuno di questi nodi riceve risposta ed invia la conferma della salute del nodo $M_j$, questo viene dichiarato guasto nella lista di $M_i$, che si occuperà di distribuire la scoperta a tutta la rete.
 \textbf{Dissemination component} Se un nodo imposta un nodo come guasto, inizia a distribuire questa informazione a tutta la rete. La versione base del protocollo SWIM utilizza un sistema multicast, mentre una versione più robusta sfrutta il principio della diffusione delle epidemie, quindi i protocolli epidemici.
-\subsubsection{Riduzione dei fasi positivi}
+\subsection{Riduzione dei fasi positivi}
 La versione base del protocollo SWIM rischia di aumentare il numero di nodi considerati guasti nel caso di perdita di pacchetti oppure per una temporanea disattivazione del nodo in questione. Per evitare questo problema viene introdotto protocollo  chiamato Suspicion protocol [SWIM]: quando un nodo Mi non riceve informazioni da un nodo Mj, ne dai nodi che lo aiutano a contattarlo, imposta il nodo $M_j$ come Sospetto. Se un altro nodo riceve questa informazione, marca nella sua lista il nodo come sospetto.
 
 Se un nodo riesce a contattare un nodo sospetto, comincia ad inviare un messaggio $Alive(M_j)$, il quale sovrascrive il sospetto di guasto. Quando un nodo rimane sospetto per un certo periodo di tempo, senza avere ulteriori informazioni, viene marcato come guasto in modo definitivo. Oltre allo stato di \textit{Suspect/Alive/Confirm}(guasto), viene associato anche un contatore, generato in modo da gestire la successione di messaggi e la loro eventuale sovrascrittura all’interno della lista.
 
+\section{Aggregation}
+I protocolli epidemici possono essere utilizzati anche per calcolare una determinata proprietà del sistema. Permettono quindi di conoscere informazioni che altrimenti sarebbero note solo avendo una conoscenza globale della rete. Possono essere utilizzati per calcolare il numero di nodi collegati, la media dei loro valori, il massimo o il minimo, lo spazio libero su disco, ... [Mont].
+
+\subsection{Media di valori}
+Si suppone che ogni nodo possiede un singolo valore. L'obiettivo è calcolare la media di questi valori utilizzando i protocolli epidemici. Le funzioni generiche di un protocollo di gossip vengono definite nel modo seguente
+\begin{itemize}
+    \item \textbf{prepareRequest()} e \textbf{prepareReply()}: ritornano il valore contenuto nel nodo
+    \item \textbf{mergeRequest()} e \textbf{mergeReply()}: ritornano una media locale tra il valore del nodo ed il valore ricevuto
+\end{itemize}
+Alla fine di uno scambio di informazioni, la somma totale dei valori dei nodi della rete rimane invariata, quindi l'algoritmo è corretto, ma allo stesso tempo diminuisce la varianza. Quando la varianza tra i valori tende a zero, il valore contenuto nei nodi sarà lo stesso, e sarà uguale alla media dei valori iniziali.
+
+Questo algoritmo da problemi nel caso di scambi di informazioni contemporanei. Se infatti un nodo $r$ contatta un nodo $p$, il quale ha già instaurato una connessione con un altro nodo $q$ senza però ricevere ancora risposta, la somma dei valori alla fine dello scambio non corrisponde a quella iniziale. Sia infatti $e_p$, $e_q$ e $e_r$ i valori precedenti lo scambio, allora dopo lo scambio $q$ conterrà $\frac{e_p+e_q}{2}$, $r$ conterrà $\frac{e_p + e_r}{2}$, mentre $p$ conterrà $\Big(\frac{e_p+e_r}{2} + e_q\Big) / 2$ la cui somma totale è $\frac{5e_p + 4 e_q + 3e_r}{4}$ chiaramente diversa da $e_p+e_q+e_r$.
+
+Si può risolvere il problema in due modi: rifiutare di comunicare con $r$ prima che la risposta sia arrivata, oppure cambiare l'implementazione delle funzioni nel seguente modo:
+\begin{itemize}
+    \item \textbf{prepareRequest()}: ritorna il vlaore del nodo
+    \item \textbf{prepareReply()}: crea una nuova variabile $d=value - (value + req)/2$ dove $req$ è il valore ricevuto dal nodo
+    \item \textbf{mergeRequest()}: ritorna il valore sotrraendo $d$
+    \item \textbf{mergeReply()}: ritorna il valore sommando $d$
+\end{itemize}
 
 
-
+\subsection{Altre funzioni di aggregazione}
+Oltre alla media si possono calcolare altri valori interessanti della rete
+\begin{itemize}
+    \item calcolo del minimo o del massimo: basta utilizzare le funzioni \textbf{prepareRequest()} e \textbf{prepareReply()} per ritornare il valore, mentre \textbf{mergeRequest()} e \textbf{mergeReply()} calcolano il massimo o il minimo tra i due valori
+    \item calcolare il numero di nodi in una rete: si parte con un nodo con valore inizializzato a $1$, e gli altri  a $0$. Dopo aver eseguito l'algoritmo per un certo numero di round il valore contenuto in ciascun nodo sarà pari a $1/n$, quindi è basilare calcolare $n$
+    \item calcolare il totale: dopo aver calcolato la media, basta moltiplicarla per il numero di nodi nella rete 
+\end{itemize}
 
 
 
