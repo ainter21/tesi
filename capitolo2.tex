@@ -21,6 +21,23 @@ Ogni nodo possiede anche un attributo status che potrà assumere tre valori, isp
 \end{itemize}
 Gli stati \textit{susceptible} e \textit{infected} verranno utilizzati nel modello SI, mentre aggiungendo lo stato \textit{removed} si parlerà di modello SIR.
 \subsection{Epidemie semplici}
+
+\begin{figure}[!htb]
+    \begin{subfigure}{0.32\textwidth}
+      \includegraphics[width=\linewidth,height=8cm]{push-code.png}
+      \caption{Push}\label{fig:push_code}
+    \end{subfigure}\hfill
+    \begin{subfigure}{0.32\textwidth}
+      \includegraphics[width=\linewidth, height=8cm]{pull-code.png}
+      \caption{Pull}\label{fig:pull_code}
+    \end{subfigure}\hfill
+    \begin{subfigure}{0.32\textwidth}
+      \includegraphics[width=\linewidth, height=8cm]{pushpull-code.png}
+      \caption{Pushpull}\label{fig:pushpull_code}
+    \end{subfigure}
+    \caption{Epidemie semplici}
+    \label{fig:simple_epidemics}
+    \end{figure}
 Il modello SI, chiamato anche anti-entropy o delle epidemie semplici, è il primo protocollo studiato nel centro di ricerca di Xerox. Come già detto, un nodo potrà trovarsi nello stato \textit{susceptible} o \textit{infected}. L'invio periodico di informazioni è scandito da un timer proprio del nodo, impostato inizialmente al valore $\Delta$. Quando il timer scende a zero, il nodo invia il messaggio secondo lo stile scelto ed imposta nuovamente il timer. È interessante notare ogni nodo esegue queste operazioni una sola volta per round.
 
 Nel documento originale vengono esposti e studiati tre stili per il modello SI, che cambiano il modo in cui i componenti della rete comunicano e risolvono le differenze. 
@@ -53,6 +70,18 @@ La soluzione migliore proposta si basa su una combinazione dei due stili precede
 Riassumendo, il modello SI è efficace in quanto permette di distribuire su tutta la rete un aggiornamento, in quanto un nodo infetto continuerà (idealmente per sempre) ad inviare o ricevere messaggi. Nonostante ciò questo può rivelarsi un peso non indifferente per la rete in quanto questo modello prevede l’invio del database completo all’interno del messaggio e non il singolo aggiornamento. Se gli aggiornamenti in una rete sono rari, la maggior parte dei messaggi diventa inutile, perché i nodi continueranno a contattarne altri che già sono a conoscenza  dell’aggiornamento. 
 \subsection{Epidemie complesse}
 
+\begin{figure}[!htb]
+    \begin{subfigure}{0.40\textwidth}
+      \includegraphics[width=\linewidth,height=10cm]{feedback-counter-code.png}
+      \caption{Feedback Counter}\label{fig:feedback_counter_code}
+    \end{subfigure}\hfill
+    \begin{subfigure}{0.40\textwidth}
+      \includegraphics[width=\linewidth, height=10cm]{blind-coin-code.png}
+      \caption{Blind Coin}\label{fig:blind_coin_code}
+    \end{subfigure}\hfill
+    \caption{Epidemie complesse}
+    \label{fig:simple_epidemics}
+    \end{figure}
 Il modello SIR viene introdotto per risolvere il problema della non terminazione del modello precedente e per aumentare l’efficienza. I nodi potranno assumere lo stato rimosso, ovvero nodi che conoscono l’aggiornamento ma non lo distribuiscono più.
 Come per le epidemie semplici, inizialmente i nodi sono tutti suscettibili: quando uno di questi viene a conoscenza di un aggiornamento, diventa infetto ed incomincia ad inviare messaggi agli altri nodi. Eventualmente questi nodi potranno “perdere” interesse nel distribuire il proprio aggiornamento, cambiando così il suo stato in rimosso.
 Quando nella rete non ci sarà più nessun nodo infetto, l’algoritmo termina.
