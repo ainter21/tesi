@@ -1,14 +1,16 @@
+\newpage
 \chapter{Protocolli epidemici nel dettaglio}
+\label{chap:epidemic}
 Un protocollo epidemico è un modello di comunicazione che trae ispirazione dallo studio della diffusione di epidemie. In modo intercambiabile si può utilizzare il termine protocollo di gossip, derivante dall'omonimo fenomeno studiato nell'ambito delle scienze sociali come metodo efficace per il passaggio di informazioni in una rete sociale.
 
 Il gossip e le epidemie sono stati analizzati e le loro caratteristiche sono state implementate in reti informatiche, nello specifico in sistemi distribuiti. Le regole su cui si basa il loro funzionamento sono semplici, ma allo stesso tempo sono robusti veloci ed affidabili. Inoltre, non è necessario alcun controllo centralizzato, condizione necessaria affinché possano essere utilizzati nei sistemi distribuiti
 
 \section{Storia}
-I protocolli epidemici vengono analizzati per la prima volta in un documento scritto da Alan Demers \cite{demers} nel 1987. Il problema riscontrato da Demers e dai suoi colleghi nella rete interna del centro di ricerca di Xerox a Palo Alto era il seguente: mantenere la consistenza tra più copie di un database presente nelle diverse macchine. Il loro obiettivo consisteva nel progettare algoritmi robusti, efficienti e con elevata scalabilità, tenendo conto del tempo necessario per la distribuzione di un aggiornamento in una rete ed il traffico generato. Dopo aver esaminato un protocollo best-effort chiamato direct mail, che prevede l'invio in broadcast a tutti i nodi di una rete dell'aggiornamento ricevuto ed aver notato che non era efficiente né affidabile (è possibile che un messaggio venga perso e non è sempre scontato che un nodo conosca tutti i componenti in una rete), le loro attenzioni si sono spostate verso due tipologie di protocolli epidemici: anti-entropy e rumor-mongering. Entrambi prevedono lo scambio periodico di informazioni tra nodi scelti in modo casuale, cercando di risolvere le differenze che intercorrono tra i due database dei rispettivi end-point. Attraverso questi approcci si può ottenere consistenza eventuale (eventual consistency), una forma di consistenza debole, tale per cui un sistema di storagee garantisce che se non ci sono ulteriori aggiornamenti, tutti gli accessi ritorneranno il valore più aggiornato \cite{vogels}.
+I protocolli epidemici vengono analizzati per la prima volta in un documento scritto da Alan Demers \cite{demers} nel 1987. Il problema riscontrato da Demers e dai suoi colleghi nella rete interna del centro di ricerca di Xerox a Palo Alto era il seguente: mantenere la consistenza tra più copie di un database presente nelle diverse macchine. Il loro obiettivo consisteva nel progettare algoritmi robusti, efficienti e con elevata scalabilità, tenendo conto del tempo necessario per la distribuzione di un aggiornamento in una rete ed il traffico generato. Dopo aver esaminato un protocollo best-effort chiamato direct mail, che prevede l'invio in broadcast a tutti i nodi di una rete dell'aggiornamento ricevuto ed aver notato che non era efficiente nè affidabile (è possibile che un messaggio venga perso e non è sempre scontato che un nodo conosca tutti i componenti in una rete), le loro attenzioni si sono spostate verso due tipologie di protocolli epidemici: anti-entropy e rumor-mongering. Entrambi prevedono lo scambio periodico di informazioni tra nodi scelti in modo casuale, cercando di risolvere le differenze che intercorrono tra i due database dei rispettivi end-point. Attraverso questi approcci si può ottenere consistenza eventuale (eventual consistency), una forma di consistenza debole, tale per cui un sistema di storagee garantisce che se non ci sono ulteriori aggiornamenti, tutti gli accessi ritorneranno il valore più aggiornato \cite{vogels}.
 
-I protocolli di gossip sono utilizzati oggigiorno in numerosi contesti: in sistemi peer-to-peer che necessitano di scambio di informazioni, come il sistema di condivisione di file BitTorrent [bittorrent] oppure nella rete BitCoin [serve fonte se possibile, ho trovato solo forum che ne parlano].
+I protocolli di gossip sono utilizzati oggigiorno in numerosi contesti: in sistemi peer-to-peer che necessitano di scambio di informazioni, come il sistema di condivisione di file BitTorrent \cite{bittorrent} oppure nella rete BitCoin.
 
-\section{Information dissemination}
+\section{Disseminazione di informazioni}
 La prima applicazione che verrà analizzata riguarda la distribuzione di informazioni, come avviene naturalmente nel gossip. Gossip nei sistemi distribuiti significa scambiarsi informazioni in modo periodico e probabilistico tra due membri \cite{kermarrec}. È importante notare che questo processo viene eseguito ripetutamente e di per se non ha una condizione di terminazione, ma verrà introdotta parlando del modello SIR e degli algoritmi di rumor-mongering.
 \subsection{Componenti e notazione}
 Si consideri una rete composta da un numero fissato P di nodi. Il grafo generato sarà completo, ovvero ogni nodo potrà comunicare direttamente con tutti gli altri nodi. Ogni nodo contiene una variabile chiamata \textit{value} inizialmente uguale per tutti. I nodi potranno scambiarsi messaggi contenenti \textit{value}, la quale avrà un attributo \textit{value.timestamp} che indicherà la data e l'ora dell'ultimo aggiornamento. L'obiettivo di questi algoritmi sarà: in assenza di ulteriori aggiornamenti, \textit{value} sarà uguale in tutti i nodi.
@@ -63,25 +65,13 @@ A differenza dello stile push, quest'ultimo risulta poco efficace quando i nodi 
 \begin{equation}
     E(s_{t+1}) = s_t \cdot s_t = s_t^2
 \end{equation}
-in quanto un nodo rimane non informato se nel round precedente era suscettibile ed ha contattato un nodo a sua volta suscettibile. Può accadere che un nodo infetto dovrà aspettare alcuni round prima di venir contattato, rendendo questi round inutili per lo scopo dell'algoritmo. Nonostante ciò, con alta probabilità dopo $O(log n)$ round metà dei nodi sarà infetta. La fase finale invece è molto più rapida in quanto, aumentando il numero di nodi infetti, aumenta la probabilità per un nodo suscettibile di contattare un nodo infetto.
+in quanto un nodo rimane non informato se nel round precedente era suscettibile ed ha contattato un nodo a sua volta suscettibile. Può accadere che un nodo infetto dovrà aspettare alcuni round prima di venir contattato, rendendo questi round inutili per lo scopo dell'algoritmo. Nonostante ciò, con alta probabilità dopo $O(\log n)$ round metà dei nodi sarà infetta. La fase finale invece è molto più rapida in quanto, aumentando il numero di nodi infetti, aumenta la probabilità per un nodo suscettibile di contattare un nodo infetto.
 \subsubsection{Push-Pull}
 La soluzione migliore proposta si basa su una combinazione dei due stili precedenti. Lo stile push-pull lavora nel modo seguente: all’azzeramento del timer, un nodo invia un messaggio ad un altro nodo scelto tra i vicini in modo casuale, il quale controllerà il timestamp ed a seconda del risultato invierà una risposta oppure aggiornerà il proprio valore. E’ più rapido in quanto sfrutta i punti di forza dei protocolli push e pull (nella fase iniziale sfrutterà il push, nella parte finale il pull). Karp \cite{karp} ha dimostrato che il numero atteso di round per infettare tutti i nodi è $O(\log\log n)$.
 
 Riassumendo, il modello SI è efficace in quanto permette di distribuire su tutta la rete un aggiornamento, in quanto un nodo infetto continuerà (idealmente per sempre) ad inviare o ricevere messaggi. Nonostante ciò questo può rivelarsi un peso non indifferente per la rete in quanto questo modello prevede l’invio del database completo all’interno del messaggio e non il singolo aggiornamento. Se gli aggiornamenti in una rete sono rari, la maggior parte dei messaggi diventa inutile, perché i nodi continueranno a contattarne altri che già sono a conoscenza  dell’aggiornamento. 
 \subsection{Epidemie complesse}
 
-\begin{figure}[!htb]
-    \begin{subfigure}{0.40\textwidth}
-      \includegraphics[width=\linewidth,height=10cm]{feedback-counter-code.png}
-      \caption{Feedback Counter}\label{fig:feedback_counter_code}
-    \end{subfigure}\hfill
-    \begin{subfigure}{0.40\textwidth}
-      \includegraphics[width=\linewidth, height=10cm]{blind-coin-code.png}
-      \caption{Blind Coin}\label{fig:blind_coin_code}
-    \end{subfigure}\hfill
-    \caption{Epidemie complesse}
-    \label{fig:simple_epidemics}
-    \end{figure}
 Il modello SIR viene introdotto per risolvere il problema della non terminazione del modello precedente e per aumentare l’efficienza. I nodi potranno assumere lo stato rimosso, ovvero nodi che conoscono l’aggiornamento ma non lo distribuiscono più.
 Come per le epidemie semplici, inizialmente i nodi sono tutti suscettibili: quando uno di questi viene a conoscenza di un aggiornamento, diventa infetto ed incomincia ad inviare messaggi agli altri nodi. Eventualmente questi nodi potranno “perdere” interesse nel distribuire il proprio aggiornamento, cambiando così il suo stato in rimosso.
 Quando nella rete non ci sarà più nessun nodo infetto, l’algoritmo termina.
@@ -104,6 +94,20 @@ Il passaggio dallo stato infetto allo stato rimosso può essere influenzato dai 
 Si ottengono così quattro possibili combinazioni: \textit{
 feedback/counter, blind/coin, feedback/coin, blind/counter}.
 Verranno analizzati \textit{feedback/counter} e \textit{blind/coin} utilizzando lo stile push, ma le considerazioni potranno essere applicate allo stesso modo anche per gli altri algoritmi.
+
+\begin{figure}[!h]
+    \begin{subfigure}{0.40\textwidth}
+      \includegraphics[width=\linewidth,height=10cm]{feedback-counter-code.png}
+      \caption{Feedback Counter}\label{fig:feedback_counter_code}
+    \end{subfigure}\hfill
+    \begin{subfigure}{0.40\textwidth}
+      \includegraphics[width=\linewidth, height=10cm]{blind-coin-code.png}
+      \caption{Blind Coin}\label{fig:blind_coin_code}
+    \end{subfigure}\hfill
+    \caption{Epidemie complesse}
+    \label{fig:complex_epidemics}
+\end{figure}
+
 
 Per confrontare i diversi protocolli che si basano sul modello SIR si utilizzano i seguenti criteri:
 \begin{itemize}
@@ -165,7 +169,7 @@ Il risultato è una funzione implicita su $s^*$, la quale mostra che il residuo 
 È possibile notare inoltre che tutte le varianti dell’algoritmo condividono la stessa relazione tra traffico e residuo. Considerando ogni messaggio inviato ha probabilità pari a 1/n di contattare un nodo specifico, la probabilità di rimanere suscettibile dopo l’invio di m*n messaggi è pari a:
 
 \begin{equation}
-    s(m*n) = \Big(1-\frac{1}{n}\Big)^{nm}
+    s(m\cdot n) = \Big(1-\frac{1}{n}\Big)^{nm}
 \end{equation}
 
 che con $n$ grandi può essere approssimato come $s = e^{-m}$.
@@ -223,7 +227,7 @@ L’algoritmo generico viene completato nel seguente modo:
     \item \texttt{prepareRequest()} e \texttt{prepareReply()}: ritorna la vista parziale completa del nodo più il proprio indirizzo con il timestamp o un identificatore aggiornato
     \item \texttt{mergeRequest()} e \texttt{mergeReply()}: ritorna i più recenti descrittori, scelti tra la propria vista e quella inviata dall’altro nodo
 \end{itemize}
-Per entrare nel sistema, un nodo deve conoscere l'indirizzo di almeno un nodo già presente nella rete. Successivamente il nodo invia la propria vista parziale, ed aggiunge alla sua vista il nuovo nodo, con un identificatore aggiornato [Mont]. Utilizzando questo algoritmo, le viste parziali continueranno a cambiare, aggiornando gli identificatori di conseguenza. Se un nodo deve lasciare la rete, non serve che svolga azioni particolari. Il suo identificatore non verrà più aggiornato ed eventualmente diventerà vecchio a tal punto da non essere più salvato nelle viste dei nodi.
+Per entrare nel sistema, un nodo deve conoscere l'indirizzo di almeno un nodo già presente nella rete. Successivamente il nodo invia la propria vista parziale, ed aggiunge alla sua vista il nuovo nodo, con un identificatore aggiornato \cite{montresor}. Utilizzando questo algoritmo, le viste parziali continueranno a cambiare, aggiornando gli identificatori di conseguenza. Se un nodo deve lasciare la rete, non serve che svolga azioni particolari. Il suo identificatore non verrà più aggiornato ed eventualmente diventerà vecchio a tal punto da non essere più salvato nelle viste dei nodi.
 
 Dall'analisi fatta in \cite{membership}, il protocollo possiede le seguenti proprietà:
 \begin{itemize}
@@ -247,11 +251,12 @@ L’algoritmo è realizzato in modo da dividere le componenti di failure detecti
 \end{itemize}
 
 \textbf{SWIM Failure Detector} Utilizza due parametri: $T$ indica il periodo del protocollo, mentre $k$ indica il numero di nodi appartenenti al gruppo che si occupa di contattare un nodo che non ha inviato risposte. Ad ogni round (di lunghezza $T$), un nodo $M_i$ sceglie un altro nodo $M_j$ dalla sua lista di vicini e invia un messaggio \textit{ping} e aspetta la risposta \textit{ack}. Se questa non arriva dopo un determinato periodo, inferiore a $T$, $M_i$ contatta i $k$ nodi scelti all’avvio del protocollo e chiede loro, attraverso un messaggio \textit{ping-req}, di contattare il nodo $M_j$. Se nessuno di questi nodi riceve risposta ed invia la conferma della salute del nodo $M_j$, questo viene dichiarato guasto nella lista di $M_i$, che si occuperà di distribuire la scoperta a tutta la rete.
+
 \textbf{Dissemination component} Se un nodo imposta un nodo come guasto, inizia a distribuire questa informazione a tutta la rete. La versione base del protocollo SWIM utilizza un sistema multicast, mentre una versione più robusta sfrutta il principio della diffusione delle epidemie, quindi i protocolli epidemici.
 \subsection{Riduzione dei fasi positivi}
 La versione base del protocollo SWIM rischia di aumentare il numero di nodi considerati guasti nel caso di perdita di pacchetti oppure per una temporanea disattivazione del nodo in questione. Per evitare questo problema viene introdotto protocollo  chiamato Suspicion protocol \cite{swim}: quando un nodo Mi non riceve informazioni da un nodo Mj, ne dai nodi che lo aiutano a contattarlo, imposta il nodo $M_j$ come Sospetto. Se un altro nodo riceve questa informazione, marca nella sua lista il nodo come sospetto.
 
-Se un nodo riesce a contattare un nodo sospetto, comincia ad inviare un messaggio $Alive(M_j)$, il quale sovrascrive il sospetto di guasto. Quando un nodo rimane sospetto per un certo periodo di tempo, senza avere ulteriori informazioni, viene marcato come guasto in modo definitivo. Oltre allo stato di \textit{Suspect/Alive/Confirm}(guasto), viene associato anche un contatore, generato in modo da gestire la successione di messaggi e la loro eventuale sovrascrittura all’interno della lista.
+Se un nodo riesce a contattare un nodo sospetto, comincia ad inviare un messaggio \texttt{Alive($M_j$)}, il quale sovrascrive il sospetto di guasto. Quando un nodo rimane sospetto per un certo periodo di tempo, senza avere ulteriori informazioni, viene marcato come guasto in modo definitivo. Oltre allo stato di \texttt{Suspect/Alive/Confirm}(guasto), viene associato anche un contatore, generato in modo da gestire la successione di messaggi e la loro eventuale sovrascrittura all’interno della lista.
 
 \section{Aggregazione}
 I protocolli epidemici possono essere utilizzati anche per calcolare una determinata proprietà del sistema. Permettono quindi di conoscere informazioni che altrimenti sarebbero note solo avendo una conoscenza globale della rete. Possono essere utilizzati per calcolare il numero di nodi collegati, la media dei loro valori, il massimo o il minimo, lo spazio libero su disco, ... \cite{montresor}.
@@ -269,7 +274,7 @@ Questo algoritmo da problemi nel caso di scambi di informazioni contemporanei. S
 Si può risolvere il problema in due modi: rifiutare di comunicare con $r$ prima che la risposta sia arrivata, oppure cambiare l'implementazione delle funzioni nel seguente modo:
 \begin{itemize}
     \item \texttt{prepareRequest()}: ritorna il vlaore del nodo
-    \item \texttt{prepareReply()}: crea una nuova variabile $d=value - (value + req)/2$ dove $req$ è il valore ricevuto dal nodo
+    \item \texttt{prepareReply()}: crea una nuova variabile $d=value - \frac{(value + req)}{2}$ dove $req$ è il valore ricevuto dal nodo
     \item \texttt{mergeRequest()}: ritorna il valore sotrraendo $d$
     \item \texttt{mergeReply()}: ritorna il valore sommando $d$
 \end{itemize}
@@ -278,15 +283,15 @@ Si può risolvere il problema in due modi: rifiutare di comunicare con $r$ prima
 \subsection{Altre funzioni di aggregazione}
 Oltre alla media si possono calcolare altri valori interessanti della rete
 \begin{itemize}
-    \item calcolo del minimo o del massimo: basta utilizzare le funzioni \texttt{prepareRequest()} e \texttt{prepareReply()} per ritornare il valore, mentre \texttt{mergeRequest()} e \texttt{mergeReply()} calcolano il massimo o il minimo tra i due valori
-    \item calcolare il numero di nodi in una rete: si parte con un nodo con valore inizializzato a $1$, e gli altri  a $0$. Dopo aver eseguito l'algoritmo per un certo numero di round il valore contenuto in ciascun nodo sarà pari a $1/n$, quindi è basilare calcolare $n$
-    \item calcolare il totale: dopo aver calcolato la media, basta moltiplicarla per il numero di nodi nella rete 
+    \item \textbf{calcolo del minimo o del massimo}: basta utilizzare le funzioni \texttt{prepareRequest()} e \\ \texttt{prepareReply()} per ritornare il valore, mentre \texttt{mergeRequest()} e \texttt{mergeReply()} calcolano il massimo o il minimo tra i due valori
+    \item \textbf{calcolo del numero di nodi in una rete}: si parte con un nodo con valore inizializzato a $1$, e gli altri  a $0$. Dopo aver eseguito l'algoritmo per un certo numero di round il valore contenuto in ciascun nodo sarà pari a $1/n$, quindi è basilare calcolare $n$
+    \item \textbf{calcolo del totale dei valori}: dopo aver calcolato la media, basta moltiplicarla per il numero di nodi nella rete 
 \end{itemize}
 \subsection{Dettagli implementativi}
-I protocolli di aggregazione presentati non tengono pero' conto della dinamicita' delle reti. Per ottenere valori aggiornati e reali questi protocolli devono essere periodicamente riavviati: i nodi salvano il valore corrente e lo utilizzano per l'avvio successivo, eseguendo il protocollo per un determinato numero di round. La singola esecuzione del protocollo e' detta epoca.
-Inoltre in sistemi con un numero di nodi molto elevati, l'esecuzione del protocollo in modo sincronizzato non e' fattibile. Il passaggio da un'epoca all'altra avviene nel momento in cui il nodo scopre un nuovo identificatore di epoca.
+I protocolli di aggregazione presentati non tengono però conto della dinamicità delle reti. Per ottenere valori aggiornati e reali questi protocolli devono essere periodicamente riavviati: i nodi salvano il valore corrente e lo utilizzano per l'avvio successivo, eseguendo il protocollo per un determinato numero di round. La singola esecuzione del protocollo è detta epoca.
+Inoltre in sistemi con un numero di nodi molto elevati, l'esecuzione del protocollo in modo sincronizzato non è fattibile. Il passaggio da un'epoca all'altra avviene nel momento in cui il nodo scopre un nuovo identificatore di epoca.
 \section{Conclusioni}
-Grazie alla loro efficienza e robustezza quando utilizzati in sistemi distribuiti, i protocolli epidemici sono sempre piu' utilizzati ed approfonditi. Come spiegato nelle sezioni precedenti, il loro utilizzo non si limita solamente alla diffusione di informazioni, ma anche ad altre apllicazioni quali la gestione della rete o l'acquisizione di dati globali difficilmente ottenibili in altri modi. Anche se inizialmente sono stati utilizzati in reti limitate e statiche, sono stati poi adattati ed ottimizzati anche per reti di grandi dimensioni che possono cambiare la loro topologia durante l'esecuzione dell'algoritmo stesso.
+Grazie alla loro efficienza e robustezza quando utilizzati in sistemi distribuiti, i protocolli epidemici sono sempre piú utilizzati ed approfonditi. Come spiegato nelle sezioni precedenti, il loro utilizzo non si limita solamente alla diffusione di informazioni, ma anche ad altre apllicazioni quali la gestione della rete o l'acquisizione di dati globali difficilmente ottenibili in altri modi. Anche se inizialmente sono stati utilizzati in reti limitate e statiche, sono stati poi adattati ed ottimizzati anche per reti di grandi dimensioni che possono cambiare la loro topologia durante l'esecuzione dell'algoritmo stesso.
 
 
 
