@@ -197,7 +197,7 @@ Implementando i protocolli di gossip in contesti reali comporta il rischio di po
 
 \section{Altri utilizzi dei protocolli epidemici}
 
-Negli scritti di Demers \cite{demers}, si supponeva che la rete fosse statica, ovvero il numero di nodi rimaneva fisso nel tempo. Inoltre ogni nodo aveva una visione totale, e quindi il grafo rappresentativo era completo. Infine il numero di macchine collegate era relativamente basso.
+Negli articoli di Demers \cite{demers}, si supponeva che la rete fosse statica, ovvero il numero di nodi rimaneva fisso nel tempo. Inoltre ogni nodo aveva una visione totale, e quindi il grafo rappresentativo era completo. Infine il numero di macchine collegate era relativamente basso.
 Oggigiorno le reti sono molto più grandi, non sono completamente connesse e la lista di nodi direttamente connessi tra loro può variare per continue connessioni-disconnessioni. Questo sicuramente porta grandi vantaggi, come una maggior scalabilità. I protocolli epidemici possono essere adattati a questi grandi cambiamenti ed utilizzati per altri scopi, oltre alla distribuzione di informazioni. Esistono implementazioni dei protocolli epidemici per mantenere informazioni sullo stato di una rete peer-to-peer \cite{newscast}, per rilevare errori e guasti \cite{swim}, per implementare garbage collection \cite{garbage_collection}, per calcolare informazioni di aggregazione \cite{aggregation}, …
 \subsection{Notazione}
 
