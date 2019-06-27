@@ -50,6 +50,13 @@ Il contenuto del corso è stato esposto utilizzando delle slide per la parte di 
 
 La parte teorica è stata presentata come lezione interattiva, dando spazio agli studenti di porci delle domande e di rispondere a quesiti da noi proposti. Ad eccezione della prima ora di lezione, tutte le altre hanno avuto una componente pratica, in modo tale che i ragazzi potessero applicare quanto imparato. La difficoltà degli esercizi è via via crescente, sia per la complessità degli algoritmi proposti, sia per un minore aiuto fornito in determinate situazioni (in alcuni casi è stato fornito solamente lo pseudocodice). 
 
+\begin{figure}[!ht]
+    \centering
+    \includegraphics[width=.9\textwidth]{si_pseudocode.png}
+    \caption{Esempi di pseudocodice presentati ai ragazzi \cite{montresor}}
+    \label{}
+\end{figure}
+
 Tra i vari argomenti possibili ho scelto di sviluppare il corso sui protocolli epidemici (vedi \autoref{chap:epidemic}) per diversi motivi: in primo luogo, l’argomento si basa su semplici regole che vengono utilizzate più volte in diversi contesti. I protocolli di gossip possono però essere studiati maggiormente e lasciano spazio anche ad un approfondimento autonomo. Inoltre sono sono un argomento interdisciplinare: vengono utilizzati in reti distribuite per la comunicazione, ma i principi su cui si basano sono studiati in epidemiologia, nell’ambito quindi della diffusione delle epidemie, ma anche dalle scienze sociali, riguardo il fenomeno del gossip. Questa interdisciplinarietà si dimostra adatta all’interno di questa esperienza che vuole portare i principi di Computational STEAM nelle scuole superiori.
 
 Nello specifico ho sviluppato il programma del corso nel seguente modo: nella prima lezione, utile come introduzione, ho presentato l’argomento e la sua natura interdisciplinare, il contesto storico, la definizione del problema, le applicazioni reali e i principi di base.
@@ -65,13 +72,15 @@ Nello specifico ho sviluppato il programma del corso nel seguente modo: nella pr
         \centering
         \includegraphics[width=\textwidth]{feedback-counter.png}
         \captionsetup{justification=centering}
-        \caption{Algoritmo modello SIR: feedback-counter} 
+        \caption{Algoritmo modello SIR: Feedback-Counter} 
     \end{subfigure}
     \caption{Esempi di output}
     \label{fig:output}
 \end{figure} 
 
-Nelle successive lezioni mi sono concentrato, dopo aver fatto una breve introduzione sui grafi (utile per alcune definizioni), sui due modelli SI e SIR presentando gli algoritmi e stili che li utilizzano, lasciando poi spazio ai ragazzi di implementarli su schermo. Una lezione tipo è stata organizzata nel seguente modo: nella prima parte viene introdotto il modello e viene definito il problema. Poi vengono introdotte le componenti necessarie, i metodi della libreria utili per la risoluzione. Infine viene esposto lo pseudocodice, che suddivide i momenti fondamentali dell'esecuzione degli algoritmi: allo scadere del timer e alla ricezione delle informazioni. Nel tempo restante della lezione i ragazzi cercano di trovare una soluzione al problema, completando gli esercizi (l'output di alcuni esercizi in Figura \ref{fig:output}).
+Nelle successive lezioni mi sono concentrato, dopo aver fatto una breve introduzione sui grafi (utile per alcune definizioni), sui due modelli SI e SIR presentando gli algoritmi e stili che li utilizzano, lasciando poi spazio ai ragazzi di implementarli su schermo. Nello specifico i ragazzi hanno completato esercizi riguardo gli stili Push, Pull e Push-Pull per il modello SI, e le varianti Feedback-Counter e Blind-Coin per quanto riguarda il modello SIR. ho preparato un esercizio su Aggregazione, che per mancanza di tempo non e' stato possiblie esporre.
+
+Una lezione tipo è stata organizzata nel seguente modo: nella prima parte viene introdotto il modello e viene definito il problema. Poi vengono introdotte le componenti necessarie, i metodi della libreria utili per la risoluzione. Infine viene esposto lo pseudocodice, che suddivide i momenti fondamentali dell'esecuzione degli algoritmi: allo scadere del timer e alla ricezione delle informazioni. Nel tempo restante della lezione i ragazzi cercano di trovare una soluzione al problema, completando gli esercizi (l'output di alcuni esercizi in Figura \ref{fig:output}).
 
 L’ambiente di sviluppo utilizzato è Processing (\href{https://processing.org}{https://processing.org}), libreria grafica di Java e IDE utile per creare simulazioni e metodi di visualizzazione efficace \cite{processing_wikipedia}. La versione utilizzata è la 3.5.3: è stata installata prima dell'inizio del corso sulle macchine dei laboratori con sistema operativo Windows 10.
 
@@ -119,4 +128,35 @@ Anche l'utilizzo di una libreria è stata una novità per i ragazzi: hanno speri
 
 Sarebbe stato anche utile investire alcune ore per introdurre in modo piú approfondito l'ambiente di sviluppo, ma purtroppo il tempo era limitato e questo avrebbe ridotto lo spazio dedicato all'argomento principale del corso. Il codice Processing può essere scritto in diversi linguaggi di programmazione oltre a Java: Python e Javascript. Si potrebbe provare a portare questi corsi utilizzando il linguaggio Python, piú semplice rispetto a Java (è stato scelto Java perché simile al C++, utilizzato durante l'anno dai ragazzi). Python presenta alcuni vantaggi rispetto ad altri linguaggi, specialmente nel contesto degli istituti superiori: come viene fatto notare da Grandell e colleghi in \cite{python_high_school}, questo linguaggio ha una sintassi piú semplice rispetto ai linguaggi normalmente utilizzati, è tipizzato dinamicamente (può essere uno svantaggio, ma riduce la quantità di codice) ed oggigiorno è sempre piú utilizzato anche nel mondo del lavoro. Inoltre le potenzialità di Python emergono anche dal grande numero di moduli che possono essere aggiunti. 
 
-In conclusione si può dire che l'esperienza ha avuto esito positivo leggendo i feedback dei ragazzi ed è stato utile a noi per capire in che modo proporre un argomento esterno al programma scolastico presentandolo con modalità diverse da quelle classiche. è stato utile ai ragazzi per capire come l'informatica possa essere applicata ed utilizzata come materia interdisciplinare e di supporto e come altre materie si possono interfacciare all'informatica ("ho conosciuto delle sue applicazioni molto interessanti ", "Ho cambiato idea sull'applicazione dell'informatica in campi diversi, penso che sia un buon supporto!"). Nel caso venga riproposta un'esperienza simile, è auspicabile che i ragazzi abbiano già un conoscenza di base riguardo la programmazione ad oggetti e l'ambiente di sviluppo Processing in modo da rendere piú comprensibili alcuni concetti e dare piú libertà ai ragazzi nello scrivere il codice (il dover partire da zero a scrivere il codice leggendo la documentazione della libreria è stato uno scoglio troppo grande da superare, quindi gli esercizi sono stati presentati in modo guidato, cone delle parti da completare).
+In conclusione si può dire che l'esperienza ha avuto esito positivo leggendo i feedback dei ragazzi ed è stato utile a noi per capire in che modo proporre un argomento esterno al programma scolastico presentandolo con modalità diverse da quelle classiche. è stato utile ai ragazzi per capire come l'informatica possa essere applicata ed utilizzata come materia interdisciplinare e di supporto e come altre materie si possono interfacciare all'informatica (Vedi Tabella \ref{table:risposte_finali}). Nel caso venga riproposta un'esperienza simile, è auspicabile che i ragazzi abbiano già un conoscenza di base riguardo la programmazione ad oggetti e l'ambiente di sviluppo Processing in modo da rendere piú comprensibili alcuni concetti e dare piú libertà ai ragazzi nello scrivere il codice (il dover partire da zero a scrivere il codice leggendo la documentazione della libreria è stato uno scoglio troppo grande da superare, quindi gli esercizi sono stati presentati in modo guidato, cone delle parti da completare).
+
+
+
+\begin{center}
+\def\arraystretch{1.5}
+\begin{table}[!ht]
+
+    \caption{Alcune risposte date dai ragazzi nel questionario finale}
+
+    \begin{tabular}{p{.9\textwidth}}
+        
+        \bfseries{Hai cambiato idea su qualcosa riguardo all'informatica dopo questi incontri?} \\
+        \midrule
+        "Ho scoperto che può essere anche molto divertente"  \\
+        "ho conosciuto delle sue applicazioni molto interessanti" \\
+        "Si, che l'informatica può essere applicata in diversi ambiti" \\
+        "Ho cambiato idea sull'applicazione dell'informatica in campi diversi, penso che sia un buon supporto!" \\
+        "Si è riaffermato in me il concetto che l'informatica non abbia confini, in termini di campi di applicazione." \\
+        \midrule
+        \bfseries{Ci sono state cose che non hai capito o che sono state spiegate in modo poco chiaro?} \\
+        \midrule
+        "La sintassi non è stata introdotta e sarebbe stato ideale" \\
+        "alcune parti di programmazione" \\
+        "Non in particolare, forse avrei avuto bisogmo di qualche spiegazione in più rispetto al codice" \\
+        "In generale il funzionamento di java a mio parere non è stato trattato abbastanza" \\
+    \end{tabular}
+    \label{table:risposte_finali}
+\end{table}
+
+
+\end{center}
