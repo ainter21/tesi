@@ -11,7 +11,7 @@ I protocolli epidemici vengono analizzati per la prima volta in un documento scr
 I protocolli di gossip sono utilizzati oggigiorno in numerosi contesti: in sistemi peer-to-peer che necessitano di scambio di informazioni, come il sistema di condivisione di file BitTorrent \cite{bittorrent} oppure nella rete BitCoin.
 
 \section{Disseminazione di informazioni}
-La prima applicazione che verrà analizzata riguarda la distribuzione di informazioni, come avviene naturalmente nel gossip. Gossip nei sistemi distribuiti significa scambiarsi informazioni in modo periodico e probabilistico tra due membri \cite{kermarrec}. È importante notare che questo processo viene eseguito ripetutamente e di per se non ha una condizione di terminazione, ma verrà introdotta parlando del modello SIR e degli algoritmi di rumor-mongering.
+La prima applicazione che verrà analizzata riguarda la distribuzione di informazioni, come avviene naturalmente nel gossip. Gossip nei sistemi distribuiti significa scambiarsi informazioni in modo periodico e probabilistico tra due membri \cite{kermarrec}. È importante notare che questo processo viene eseguito ripetutamente e di per sé non ha una condizione di terminazione, ma verrà introdotta parlando del modello SIR e degli algoritmi di rumor-mongering.
 \subsection{Componenti e notazione}
 Si consideri una rete composta da un numero fissato P di nodi. Il grafo generato sarà completo, ovvero ogni nodo potrà comunicare direttamente con tutti gli altri nodi. Ogni nodo contiene una variabile chiamata \textit{value} inizialmente uguale per tutti. I nodi potranno scambiarsi messaggi contenenti \textit{value}, la quale avrà un attributo \textit{value.timestamp} che indicherà la data e l'ora dell'ultimo aggiornamento. L'obiettivo di questi algoritmi sarà: in assenza di ulteriori aggiornamenti, \textit{value} sarà uguale in tutti i nodi.
 
@@ -46,7 +46,7 @@ Nel documento originale vengono esposti e studiati tre stili per il modello SI, 
 
 Si utilizzerà la seguente notazione: $n$ indica il numero totale dei nodi presenti sulla rete ($|P|$), mentre i valori $s$ e $i$ indicano rispettivamente il rapporto $|S|/n$ e $|I|/n$. Chiaramente $s + i = 1$.
 \subsubsection{Push}
-Il primo stile è detto stile push: un nodo infetto sceglierà in modo casuale un vicino a cui inviare informazioni. il nodo destinazione verificherà se le informazioni ricevute sono più aggiornate e, in caso affermativo, cambierà il proprio valore. Un nodo quindi, se infetto, invierà sempre un messaggio ad un altro nodo, indipendentemente dal fatto che il nodo destinazione conosca o meno l'aggiornamento. Si può facilmente intuire che lo stile push è più efficace quando il numero di nodi infetti è basso. In uqesta situazione, infatti, il numero di nodi infetti tenderà a raddoppiare ad ogni round e dopo $O(\log_2 n)$ round il valore $i$ si avvicinerà a $1/2$. Quando invece $i$ supera $1/2$ la situazione cambia: se definiamo $s_t$ il rapporto di nodi suscettibili al roud $t$, possiamo calcolare il numero atteso di nodi suscettibili al round $t + 1$ come:
+Il primo stile è detto stile push: un nodo infetto sceglierà in modo casuale un vicino a cui inviare informazioni. il nodo destinazione verificherà se le informazioni ricevute sono più aggiornate e, in caso affermativo, cambierà il proprio valore. Un nodo quindi, se infetto, invierà sempre un messaggio ad un altro nodo, indipendentemente dal fatto che il nodo destinazione conosca o meno l'aggiornamento. Si può facilmente intuire che lo stile push è più efficace quando il numero di nodi infetti è basso. In questa situazione, infatti, il numero di nodi infetti tenderà a raddoppiare ad ogni round e dopo $O(\log_2 n)$ round il valore $i$ si avvicinerà a $1/2$. Quando invece $i$ supera $1/2$ la situazione cambia: se definiamo $s_t$ il rapporto di nodi suscettibili al round $t$, possiamo calcolare il numero atteso di nodi suscettibili al round $t + 1$ come:
 \begin{equation}
     E(s_{t + 1}) = s_t  \Big(1 - \frac{1}{n}\Big)^{n(1-s_t)}
 \end{equation}
@@ -61,7 +61,7 @@ dove $\log_2 n$ deriva dalla prima fase, $\ln n$ da quella finale, mentre la fas
 \subsubsection{Pull}
 Il secondo stile analizzato è lo stile pull: i nodi chiedono informazioni ad altri nodi, inviando il proprio timestamp. Se questi ultimi possiedono un aggiornamento più recente, invieranno un messaggio in risposta che verrà utilizzato dal nodo iniziale per cambiare il proprio valore.
 
-A differenza dello stile push, quest'ultimo risulta poco efficace quando i nodi infetti sono pochi. Il numero atteso di nodi non ancora infeti dopo $t+1$ round può essere espresso come:
+A differenza dello stile push, quest'ultimo risulta poco efficace quando i nodi infetti sono pochi. Il numero atteso di nodi non ancora infetti dopo $t+1$ round può essere espresso come:
 \begin{equation}
     E(s_{t+1}) = s_t \cdot s_t = s_t^2
 \end{equation}
@@ -273,9 +273,9 @@ Questo algoritmo da problemi nel caso di scambi di informazioni contemporanei. S
 
 Si può risolvere il problema in due modi: rifiutare di comunicare con $r$ prima che la risposta sia arrivata, oppure cambiare l'implementazione delle funzioni nel seguente modo:
 \begin{itemize}
-    \item \texttt{prepareRequest()}: ritorna il vlaore del nodo
+    \item \texttt{prepareRequest()}: ritorna il valore del nodo
     \item \texttt{prepareReply()}: crea una nuova variabile $d=value - \frac{(value + req)}{2}$ dove $req$ è il valore ricevuto dal nodo
-    \item \texttt{mergeRequest()}: ritorna il valore sotrraendo $d$
+    \item \texttt{mergeRequest()}: ritorna il valore sottraendo $d$
     \item \texttt{mergeReply()}: ritorna il valore sommando $d$
 \end{itemize}
 
@@ -291,7 +291,7 @@ Oltre alla media si possono calcolare altri valori interessanti della rete
 I protocolli di aggregazione presentati non tengono però conto della dinamicità delle reti. Per ottenere valori aggiornati e reali questi protocolli devono essere periodicamente riavviati: i nodi salvano il valore corrente e lo utilizzano per l'avvio successivo, eseguendo il protocollo per un determinato numero di round. La singola esecuzione del protocollo è detta epoca.
 Inoltre in sistemi con un numero di nodi molto elevati, l'esecuzione del protocollo in modo sincronizzato non è fattibile. Il passaggio da un'epoca all'altra avviene nel momento in cui il nodo scopre un nuovo identificatore di epoca.
 \section{Conclusioni}
-Grazie alla loro efficienza e robustezza quando utilizzati in sistemi distribuiti, i protocolli epidemici sono sempre piú utilizzati ed approfonditi. Come spiegato nelle sezioni precedenti, il loro utilizzo non si limita solamente alla diffusione di informazioni, ma anche ad altre apllicazioni quali la gestione della rete o l'acquisizione di dati globali difficilmente ottenibili in altri modi. Anche se inizialmente sono stati utilizzati in reti limitate e statiche, sono stati poi adattati ed ottimizzati anche per reti di grandi dimensioni che possono cambiare la loro topologia durante l'esecuzione dell'algoritmo stesso.
+Grazie alla loro efficienza e robustezza quando utilizzati in sistemi distribuiti, i protocolli epidemici sono sempre piú utilizzati ed approfonditi. Come spiegato nelle sezioni precedenti, il loro utilizzo non si limita solamente alla diffusione di informazioni, ma anche ad altre applicazioni quali la gestione della rete o l'acquisizione di dati globali difficilmente ottenibili in altri modi. Anche se inizialmente sono stati utilizzati in reti limitate e statiche, sono stati poi adattati ed ottimizzati anche per reti di grandi dimensioni che possono cambiare la loro topologia durante l'esecuzione dell'algoritmo stesso.
 
 
 
