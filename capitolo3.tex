@@ -117,15 +117,92 @@ Ho fornito la documentazione utile per completare gli esercizi, con la spiegazio
 Le attività sono state svolte nei laboratori di informatica, in modo tale da poter proiettare i lucidi e permettere ai ragazzi di lavorare in autonomia o a gruppi. L'idea iniziale era di formare dei gruppi di lavoro per poter collaborare e sviluppare abilità di problem solving e lavoro di squadra. Questa soluzione si è rivelata di difficile attuazione in quanto i ragazzi possiedono un account personale non condivisibile e se alcuni studenti rimanevano assenti, si rischiava di non poter accedere al lavoro iniziato la volta precedente. Abbiamo comunque fatto il possibile per invogliarli a lavorare in gruppo.
 
 \subsection{Libreria nel dettaglio}
-La libreria è stata scritta in modo tale da nascondere la parte di programmazione ad oggetti non studiata dai ragazzi al liceo scientifico. Le classi principali sono: \texttt{Graph}, \texttt{Node} e \texttt{Info}. La rete è visualizzata attraverso un grafo. Ho associato il valore interno del nodo ad un colore, per rendere l'output visivo piú accattivante.
+La libreria è stata scritta in modo tale da nascondere la parte di programmazione ad oggetti non studiata dai ragazzi al liceo scientifico. Le classi principali sono: \texttt{Graph}, \texttt{Node} e \texttt{Info} (Definizioni delle classi \ref{lst:library_code}). La rete è visualizzata attraverso un grafo. Ho associato il valore interno del nodo ad un colore, per rendere l'output visivo piú accattivante.
 
 I ragazzi hanno utilizzato i metodi già implementati nei vari oggetti (specialmente nella classe \texttt{Node}) per eseguire azioni e acquisire informazioni. Il grafo creato è completo, assunzione che durante le lezioni non è stata rilassata per mancanza di tempo.
 
-All'interno della libreria è presente una classe astratta \texttt{Graph}, da cui sono definiti grafi dei rispettivi modelli: \texttt{GraphSI}, \texttt{GraphSIR} e \texttt{GraphAggregation}. Vengono inizializzati come grafi completi, in quanto durante il corso è stata fatta questa assunzione. Ogni grafo ha un metodo utilizzato per aggiornare le sue componenti \texttt{updateGraph()} ed uno per disegnarlo ad ogni frame di esecuzione \texttt{drawGraph()}. 
+All'interno della libreria è presente una classe astratta \texttt{Graph}, da cui sono definiti grafi dei rispettivi modelli: \texttt{GraphSI} e \texttt{GraphSIR}. Vengono inizializzati come grafi completi, in quanto durante il corso è stata fatta questa assunzione. Ogni grafo ha un metodo utilizzato per aggiornare le sue componenti \texttt{updateGraph()} ed uno per disegnarlo ad ogni frame di esecuzione \texttt{drawGraph()}. 
 
 La seconda classe, \texttt{Node}, oltre al metodo \texttt{drawNode()} che disegna il nodo, è fornita di metodi utili per aggiornare il valore (\texttt{setValue()}, \texttt{setInfected()} e \texttt{setRemoved()}), per resettare il timer interno (\texttt{resetTimer()}) e per inviare le informazioni (\texttt{sendInfo(target, type)}). Quest'ultimo metodo istanzia un ulteriore oggetto, \texttt{Info}, utile per contenere tutti i dati che devono essere poi processati nel momento in cui l'informazione arriva a destinazione (secondo gli algoritmi e i modelli spiegati nel \autoref{chap:epidemic}).
 
 I ragazzi hanno comunque avuto la possibilità di leggere il codice e di modificarlo, compilando la propria versione della libreria.
+
+\newpage
+\begin{lstlisting}[label={lst:library_code}, caption={La definizione delle classi principali utilizzate dai ragazzi}]
+
+    //--------------------------Graph.java--------------------------
+
+    abstract class Graph {
+    
+        public Graph(PApplet parent, int size);
+        public void switchEdges();
+        public void drawGraph();
+        public void drawInfo();
+        public abstract void overGraph();
+        public void updateTimer();
+        public Node getNode(int index):
+    
+    }
+    
+    //--------------------------GraphSI.java--------------------------
+    
+    public class GraphSI extends Graph {
+    
+        public GraphSI(PApplet parent, int size);
+        public void overGraph();
+    
+    }
+    
+    //--------------------------GraphSIR.java--------------------------
+    
+    public class GraphSIR extends Graph {
+    
+        public GraphSIR(PApplet parent, int size, int counter);
+        public void overGraph();
+        public void drawGraph() ;
+    
+    }
+    
+    //--------------------------Node.java--------------------------
+    
+    public class Node {
+    
+        public Node(PApplet parent, int name, float x, float y);
+        public Node(PApplet parent, int name, float x, float y, int counter);
+        public void drawNode();
+        public void drawEdges();
+        public void addNeighbor(Node n);
+        public int getNeighborsSize();
+        public void updateValue();
+        public void sendInfo(Node target, int type);
+        public void resetTimer();
+        public void setValue(Info i) ;
+        public void setInfected();
+        public void setRemoved();
+        public Node getRandomNeighbor();
+        public Info receivedInfo();
+        public boolean hasReceived();
+    
+    }
+
+
+
+
+    //--------------------------Info.java--------------------------
+    
+
+    public class Info {
+    
+        public Info(PApplet parent, Node origin, Node target, int type, int status);
+        public void update();
+        public void display();
+    
+    }
+    
+    
+        
+    \end{lstlisting}
+    
 \section{Analisi dei risultati}
 
 \begin{figure}[ht]
@@ -187,3 +264,4 @@ In conclusione si può dire che l'esperienza ha avuto esito positivo leggendo i 
 
 
 \end{center}
+
