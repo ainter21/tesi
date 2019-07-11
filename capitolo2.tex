@@ -3,17 +3,17 @@
 \label{chap:epidemic}
 Un protocollo epidemico è un modello di comunicazione che trae ispirazione dallo studio della diffusione di epidemie. In modo intercambiabile si può utilizzare il termine protocollo di gossip, derivante dall'omonimo fenomeno studiato nell'ambito delle scienze sociali come metodo efficace per il passaggio di informazioni in una rete sociale.
 
-Il gossip e le epidemie sono stati analizzati e le loro caratteristiche sono state implementate in reti informatiche, nello specifico in sistemi distribuiti. Le regole su cui si basa il loro funzionamento sono semplici, ma allo stesso tempo sono robusti veloci ed affidabili. Inoltre, non è necessario alcun controllo centralizzato, condizione necessaria affinché possano essere utilizzati nei sistemi distribuiti
+Il gossip e le epidemie sono stati analizzati e le loro caratteristiche sono state implementate in reti informatiche, nello specifico in sistemi distribuiti. Le regole su cui si basa il loro funzionamento sono semplici, ma allo stesso tempo sono robusti veloci ed affidabili. Inoltre, non è necessario alcun controllo centralizzato, condizione necessaria affinché possano essere utilizzati nei sistemi distribuiti.
 
 \section{Storia}
-I protocolli epidemici vengono analizzati per la prima volta in un documento scritto da Alan Demers \cite{demers} nel 1987. Il problema riscontrato da Demers e dai suoi colleghi nella rete interna del centro di ricerca di Xerox a Palo Alto era il seguente: mantenere la consistenza tra più copie di un database presente nelle diverse macchine. Il loro obiettivo consisteva nel progettare algoritmi robusti, efficienti e con elevata scalabilità, tenendo conto del tempo necessario per la distribuzione di un aggiornamento in una rete ed il traffico generato. Dopo aver esaminato un protocollo best-effort chiamato direct mail, che prevede l'invio in broadcast a tutti i nodi di una rete dell'aggiornamento ricevuto ed aver notato che non era efficiente nè affidabile (è possibile che un messaggio venga perso e non è sempre scontato che un nodo conosca tutti i componenti in una rete), le loro attenzioni si sono spostate verso due tipologie di protocolli epidemici: anti-entropy e rumor-mongering. Entrambi prevedono lo scambio periodico di informazioni tra nodi scelti in modo casuale, cercando di risolvere le differenze che intercorrono tra i due database dei rispettivi end-point. Attraverso questi approcci si può ottenere consistenza eventuale (eventual consistency), una forma di consistenza debole, tale per cui un sistema di storagee garantisce che se non ci sono ulteriori aggiornamenti, tutti gli accessi ritorneranno il valore più aggiornato \cite{vogels}.
+I protocolli epidemici vengono analizzati per la prima volta in un documento scritto da Alan Demers \cite{demers} nel 1987. Il problema riscontrato da Demers e dai suoi colleghi nella rete interna del centro di ricerca di Xerox a Palo Alto era il seguente: mantenere la consistenza tra più copie di un database presente nelle diverse macchine. Il loro obiettivo consisteva nel progettare algoritmi robusti, efficienti e con elevata scalabilità, tenendo conto del tempo necessario per la distribuzione di un aggiornamento in una rete e del traffico generato. Dopo aver esaminato un protocollo best-effort chiamato direct mail, che prevede l'invio in broadcast a tutti i nodi di una rete dell'aggiornamento ricevuto ed aver notato che non era efficiente nè affidabile (è possibile che un messaggio venga perso e non è sempre scontato che un nodo conosca tutti i componenti in una rete), le loro attenzioni si sono spostate verso due tipologie di protocolli epidemici: anti-entropy e rumor-mongering. Entrambi prevedono lo scambio periodico di informazioni tra nodi scelti in modo casuale, cercando di risolvere le differenze che intercorrono tra i due database dei rispettivi end-point. Attraverso questi approcci si può ottenere consistenza eventuale (eventual consistency), una forma di consistenza debole, tale per cui un sistema di storage garantisce che se non ci sono ulteriori aggiornamenti, tutti gli accessi ritorneranno il valore più aggiornato \cite{vogels}.
 
 I protocolli di gossip sono utilizzati oggigiorno in numerosi contesti: in sistemi peer-to-peer che necessitano di scambio di informazioni, come il sistema di condivisione di file BitTorrent \cite{bittorrent} oppure nella rete BitCoin.
 
 \section{Disseminazione di informazioni}
 La prima applicazione che verrà analizzata riguarda la distribuzione di informazioni, come avviene naturalmente nel gossip. Gossip nei sistemi distribuiti significa scambiarsi informazioni in modo periodico e probabilistico tra due membri \cite{kermarrec}. È importante notare che questo processo viene eseguito ripetutamente e di per sé non ha una condizione di terminazione, ma verrà introdotta parlando del modello SIR e degli algoritmi di rumor-mongering.
 \subsection{Componenti e notazione}
-Si consideri una rete composta da un numero fissato P di nodi. Il grafo generato sarà completo, ovvero ogni nodo potrà comunicare direttamente con tutti gli altri nodi. Ogni nodo contiene una variabile chiamata \textit{value} inizialmente uguale per tutti. I nodi potranno scambiarsi messaggi contenenti \textit{value}, la quale avrà un attributo \textit{value.timestamp} che indicherà la data e l'ora dell'ultimo aggiornamento. L'obiettivo di questi algoritmi sarà: in assenza di ulteriori aggiornamenti, \textit{value} sarà uguale in tutti i nodi.
+Si consideri una rete composta da un numero fissato $P$ di nodi. Il grafo generato sarà completo, ovvero ogni nodo potrà comunicare direttamente con tutti gli altri nodi. Ogni nodo contiene una variabile chiamata \textit{value} inizialmente uguale per tutti. I nodi potranno scambiarsi messaggi contenenti \textit{value}, la quale avrà un attributo \textit{value.timestamp} che indicherà la data e l'ora dell'ultimo aggiornamento. L'obiettivo di questi algoritmi sarà: in assenza di ulteriori aggiornamenti, \textit{value} sarà uguale in tutti i nodi.
 
 Ogni nodo possiede anche un attributo status che potrà assumere tre valori, ispirati alla terminologia utilizzata in epidemiologia:
 \begin{itemize}
@@ -46,7 +46,7 @@ Nel documento originale vengono esposti e studiati tre stili per il modello SI, 
 
 Si utilizzerà la seguente notazione: $n$ indica il numero totale dei nodi presenti sulla rete ($|P|$), mentre i valori $s$ e $i$ indicano rispettivamente il rapporto $|S|/n$ e $|I|/n$. Chiaramente $s + i = 1$.
 \subsubsection{Push}
-Il primo stile è detto stile push: un nodo infetto sceglierà in modo casuale un vicino a cui inviare informazioni. il nodo destinazione verificherà se le informazioni ricevute sono più aggiornate e, in caso affermativo, cambierà il proprio valore. Un nodo quindi, se infetto, invierà sempre un messaggio ad un altro nodo, indipendentemente dal fatto che il nodo destinazione conosca o meno l'aggiornamento. Si può facilmente intuire che lo stile push è più efficace quando il numero di nodi infetti è basso. In questa situazione, infatti, il numero di nodi infetti tenderà a raddoppiare ad ogni round e dopo $O(\log_2 n)$ round il valore $i$ si avvicinerà a $1/2$. Quando invece $i$ supera $1/2$ la situazione cambia: se definiamo $s_t$ il rapporto di nodi suscettibili al round $t$, possiamo calcolare il numero atteso di nodi suscettibili al round $t + 1$ come:
+Il primo stile è detto stile push: un nodo infetto sceglierà in modo casuale un vicino a cui inviare informazioni. Il nodo destinazione verificherà se le informazioni ricevute sono più aggiornate e, in caso affermativo, cambierà il proprio valore (Figura \ref{fig:push_code}). Un nodo quindi, se infetto, invierà sempre un messaggio ad un altro nodo, indipendentemente dal fatto che il nodo destinazione conosca o meno l'aggiornamento. Si può facilmente intuire che lo stile push è più efficace quando il numero di nodi infetti è basso. In questa situazione, infatti, il numero di nodi infetti tenderà a raddoppiare ad ogni round e dopo $O(\log_2 n)$ round il valore $i$ si avvicinerà a $1/2$. Quando invece $i$ supera $1/2$ la situazione cambia: se definiamo $s_t$ il rapporto di nodi suscettibili al round $t$, possiamo calcolare il numero atteso di nodi suscettibili al round $t + 1$ come:
 \begin{equation}
     E(s_{t + 1}) = s_t  \Big(1 - \frac{1}{n}\Big)^{n(1-s_t)}
 \end{equation}
@@ -59,7 +59,7 @@ Questo valore può essere approssimato per $n$ molto grandi a $s_t e^{-(1-s_t)}$
 
 dove $\log_2 n$ deriva dalla prima fase, $\ln n$ da quella finale, mentre la fase intermedia, molto veloce, dura un numero costante di cicli.
 \subsubsection{Pull}
-Il secondo stile analizzato è lo stile pull: i nodi chiedono informazioni ad altri nodi, inviando il proprio timestamp. Se questi ultimi possiedono un aggiornamento più recente, invieranno un messaggio in risposta che verrà utilizzato dal nodo iniziale per cambiare il proprio valore.
+Il secondo stile analizzato è lo stile pull: i nodi chiedono informazioni ad altri nodi, inviando il proprio timestamp. Se questi ultimi possiedono un aggiornamento più recente, invieranno un messaggio in risposta che verrà utilizzato dal nodo iniziale per cambiare il proprio valore (Figura \ref{fig:pull_code}).
 
 A differenza dello stile push, quest'ultimo risulta poco efficace quando i nodi infetti sono pochi. Il numero atteso di nodi non ancora infetti dopo $t+1$ round può essere espresso come:
 \begin{equation}
@@ -67,7 +67,7 @@ A differenza dello stile push, quest'ultimo risulta poco efficace quando i nodi 
 \end{equation}
 in quanto un nodo rimane non informato se nel round precedente era suscettibile ed ha contattato un nodo a sua volta suscettibile. Può accadere che un nodo infetto dovrà aspettare alcuni round prima di venir contattato, rendendo questi round inutili per lo scopo dell'algoritmo. Nonostante ciò, con alta probabilità dopo $O(\log n)$ round metà dei nodi sarà infetta. La fase finale invece è molto più rapida in quanto, aumentando il numero di nodi infetti, aumenta la probabilità per un nodo suscettibile di contattare un nodo infetto.
 \subsubsection{Push-Pull}
-La soluzione migliore proposta si basa su una combinazione dei due stili precedenti. Lo stile push-pull lavora nel modo seguente: all’azzeramento del timer, un nodo invia un messaggio ad un altro nodo scelto tra i vicini in modo casuale, il quale controllerà il timestamp ed a seconda del risultato invierà una risposta oppure aggiornerà il proprio valore. E’ più rapido in quanto sfrutta i punti di forza dei protocolli push e pull (nella fase iniziale sfrutterà il push, nella parte finale il pull). Karp \cite{karp} ha dimostrato che il numero atteso di round per infettare tutti i nodi è $O(\log\log n)$.
+La soluzione migliore proposta si basa su una combinazione dei due stili precedenti. Lo stile push-pull lavora nel modo seguente: all’azzeramento del timer, un nodo invia un messaggio ad un altro nodo scelto tra i vicini in modo casuale, il quale controllerà il timestamp ed a seconda del risultato invierà una risposta oppure aggiornerà il proprio valore (Figura \ref{fig:pushpull_code}). E’ più rapido in quanto sfrutta i punti di forza dei protocolli push e pull (nella fase iniziale sfrutterà il push, nella parte finale il pull). Karp \cite{karp} ha dimostrato che il numero atteso di round per infettare tutti i nodi è $O(\log\log n)$.
 
 Riassumendo, il modello SI è efficace in quanto permette di distribuire su tutta la rete un aggiornamento, in quanto un nodo infetto continuerà (idealmente per sempre) ad inviare o ricevere messaggi. Nonostante ciò questo può rivelarsi un peso non indifferente per la rete in quanto questo modello prevede l’invio del database completo all’interno del messaggio e non il singolo aggiornamento. Se gli aggiornamenti in una rete sono rari, la maggior parte dei messaggi diventa inutile, perché i nodi continueranno a contattarne altri che già sono a conoscenza  dell’aggiornamento. 
 \subsection{Epidemie complesse}
@@ -166,31 +166,68 @@ Questa equazione può essere utilizzata per calcolare $s^*$ quando $i(s^*) = 0$
 
 Il risultato è una funzione implicita su $s^*$, la quale mostra che il residuo diminuisce esponenzialmente all'aumentare di $k$.
 
-È possibile notare inoltre che tutte le varianti dell’algoritmo condividono la stessa relazione tra traffico e residuo. Considerando ogni messaggio inviato ha probabilità pari a 1/n di contattare un nodo specifico, la probabilità di rimanere suscettibile dopo l’invio di m*n messaggi è pari a:
+È possibile notare inoltre che tutte le varianti dell’algoritmo condividono la stessa relazione tra traffico e residuo. Considerando ogni messaggio inviato ha probabilità pari a 1/n di contattare un nodo specifico, la probabilità di rimanere suscettibile dopo l’invio di $m\cdot n$ messaggi è pari a:
 
 \begin{equation}
     s(m\cdot n) = \Big(1-\frac{1}{n}\Big)^{nm}
 \end{equation}
 
 che con $n$ grandi può essere approssimato come $s = e^{-m}$.
-Come si può notare dalla tabella 1, il ritardo è l’unico parametro che distingue le varianti: osservando i dati si può notare che feedback/counter offre ritardo inferiore a parità di $k$.
+Come si può notare dalla Tabella \ref{table:results}, il ritardo è l’unico parametro che distingue le varianti: osservando i dati si può notare che feedback/counter offre ritardo inferiore a parità di $k$.
+\begin{center}
+\begin{table}[!ht]
 
+\begin{tabular}{|c|c|c|c|}
+    \hline
+    \thead{Counter \\ $k$} & \thead{Residuo \\ $s$} & \thead{Traffico \\ $m$} & \thead{Ritardo medio \\ $t_{avg}$} \\
+    \hline
+    1&0.176&1.74&11.0\\
+    \hline
+    2&0.037&3.30&12.1\\
+    \hline
+    3&0.011&4.53&12.5\\
+    \hline
+    4&0.0036&5.64&12.7\\
+    \hline
+    5&0.0012&6.68&12.8\\
+    \hline
+\end{tabular}
+    \qquad
+    \begin{tabular}{|c|c|c|c|}
+        \hline
+        \thead{Coin \\ $k$} & \thead{Residuo \\ $s$} & \thead{Traffico \\ $m$} & \thead{Ritardo medio \\ $t_{avg}$} \\
+        \hline
+        1&0.960&0.04&19\\
+        \hline
+        2&0.205&1.59&17\\
+        \hline
+        3&0.060&2.82&15\\
+        \hline
+        4&0.021&3.91&14.1\\
+        \hline
+        5&0.008&4.95&13.8\\
+        \hline
 
+\end{tabular}
+\caption{Risultati dell'esecuzione di Feedback/Counter (a sinistra) \\e di Blind/Coin (a destra)\cite{demers}.}
+\label{table:results}
+\end{table}
+\end{center}
 
 
 \subsection{Dettagli implementativi}
 
-Nelle pagine precedenti sono stati descritti i protocolli basati sui modelli SI e SIR utilizzati per la distribuzione di informazioni, senza parlare di come questi possano essere utilizzati in casi reali. Innanzitutto anti-entropy e rumor-mongering possono essere utilizzati in contemporanea sulla medesima rete: si suppone infatti che un protocollo basato sul modello SIR può eventualmente terminare senza che si sia ottenuta consistenza su tutta la rete. Per evitare che ciò accada, è possibile eseguire un algoritmo anti-entropy meno frequentemente.
+Nelle pagine precedenti sono stati descritti i protocolli basati sui modelli SI e SIR utilizzati per la distribuzione di informazioni, senza parlare di come questi possano essere utilizzati in casi reali. Innanzitutto anti-entropy e rumor-mongering possono essere utilizzati in contemporanea sulla medesima rete: si suppone infatti che un protocollo basato sul modello SIR può eventualmente terminare senza che si sia ottenuta consistenza su tutta la rete. Per evitare che ciò accada, è possibile eseguire un algoritmo anti-entropy meno frequentemente, cercando di mantenere consistenza eventuale.
 
 
 \subsubsection{Valori multipli}
 
 È molto probabile che i protocolli debbano lavorare con più che singoli valori, e quindi la comparazione può diventare molto onerosa. Molto spesso infatti, lavorando con database per esempio, il confronto diventa quasi completamente inutile perché gran parte dei dati sono simili. È possibile risolvere in parte questo problema utilizzando dei checksum calcolati a partire dalla copia del database contenuta nel nodo, ricalcolando ogni volta che quest’ultimo viene aggiornato. Il primo scambio tra nodi avviene attraverso il confronto dei relativi checksum, eseguendo il confronto completo dei database solo se si trovano in disaccordo. Purtroppo la computazione dei checksum tende ad essere molto spesso diversa se l’aggiornamento ai nodi arriva in momenti tanto diversi, quindi la rete tenderà comunque a dover confrontare i dati completi. Una soluzione più complessa prevede di definire un intervallo di tempo che sia sufficiente per far ricevere l’aggiornamento a tutti i nodi. Ogni nodo contiene una lista con gli aggiornamenti più recenti, all’interno di questo spazio di tempo, che viene scambiata ed utilizzata per aggiornare checksum e database. Solo nel caso di un ulteriore disaccordo, viene eseguito il confronto con l’intero database. È importante notare che la scelta dell’intervallo di tempo è cruciale per il funzionamento: se viene fatta in maniera sbagliata, i checksum tenderanno a differenziarsi, aumentando il traffico rendendolo superiore al traffico generato dai protocolli anti-entropy senza checksum.
 
-Un' ultima soluzione, che non prevede la scelta a priori di un intervallo di tempo, prevede la memorizzazione di un indice inverso del database basato sul timestamp. I nodi si scambiano gli aggiornamenti in ordine inverso di timestamp, ricalcolando i checksum fino ad ottenere un consistenza di questi ultimi. Non è comunque ottimale a causa del costo di mantenimento dell’indice inverso in ogni nodo.
+Un'ultima soluzione, che non prevede la scelta a priori di un intervallo di tempo, prevede la memorizzazione di un indice inverso del database basato sul timestamp. I nodi si scambiano gli aggiornamenti in ordine inverso di timestamp, ricalcolando i checksum fino ad ottenere un consistenza di questi ultimi. Non è comunque ottimale a causa del costo di mantenimento dell’indice inverso in ogni nodo.
 
 \subsubsection{Traffico generato}
-Un problema non trascurabile in casi reali è sicuramente il traffico che una rete può supportare. Questi protocolli prevedono che ad ogni round vengano inviati più messaggi contemporaneamente, rischiando quindi di sovraccaricare la rete. Demer aveva definito questo come connection limit, spiegando che definire un limite è necessario sia in caso di puh che di pull. Questa condizione porta però ad un significativo peggioramento dei protocolli che utilizzano lo stile pull, mentre push diventa migliore. Il protocollo Scuttlebutt \cite{flowgossip} definisce alcuni rimedi a questa limitazione, specificando un metodo per determinare in modo dinamico il tasso massimo di traffico che un nodo può generare senza dover creare un sistema di backlog per gli aggiornamenti. 
+Un problema non trascurabile in casi reali è sicuramente il traffico che una rete può supportare. Questi protocolli prevedono che ad ogni round vengano inviati più messaggi contemporaneamente, rischiando quindi di sovraccaricare la rete. Demers aveva definito questo come connection limit, spiegando che definire un limite è necessario sia in caso di push che di pull. Questa condizione porta però ad un significativo peggioramento dei protocolli che utilizzano lo stile pull, mentre push diventa migliore. Il protocollo Scuttlebutt \cite{flowgossip} definisce alcuni rimedi a questa limitazione, specificando un metodo per determinare in modo dinamico il tasso massimo di traffico che un nodo può generare senza dover creare un sistema di backlog per gli aggiornamenti. 
 
 \subsubsection{Gestione dei fallimenti}
 Implementando i protocolli di gossip in contesti reali comporta il rischio di possibili fallimenti per fattori esterni. Per fortuna, la perdita di messaggi non aggrava sull’esecuzione se non rallentando il raggiungimento della consistenza (alcuni round diventano inutili). Se alcuni nodi smettono di “funzionare”, gli scambi con questi diventano inutili e i protocolli rallentano la loro esecuzione. È comunque auspicabile mantenere lo stato attivo degli endpoint in modo da evitare questi inconvenienti.
@@ -242,7 +279,7 @@ La rilevazione di errori in sistemi distribuiti è un problema complesso \cite{f
 \subsection{Definizione del problema}
 Il protocollo SWIM \cite{swim} offre un sistema di failure detection e, utilizzando il principio del gossip, un modo scalabile ed efficiente per distribuire le informazioni ricevute, mantenendo così aggiornata la lista dei membri che ogni nodo possiede. Si può dire quindi che combina sia il membership management e la failure detection.
 
-Il problema della scalabilità delle precedenti soluzioni è dovuto principalmente all’utilizzo della tecnica di heartbeating: un membro Mi è dichiarato guasto da un altro membro Mj quando non riceve messaggi “heartbeat” (messaggi con counter incrementale) per un determinato numero di periodi consecutivi \cite{swim}.
+Il problema della scalabilità delle precedenti soluzioni è dovuto principalmente all’utilizzo della tecnica di heartbeating: un membro $M_i$ è dichiarato guasto da un altro membro $M_j$ quando non riceve messaggi “heartbeat” (messaggi con counter incrementale) per un determinato numero di periodi consecutivi \cite{swim}.
 \subsection{Algoritmo}
 L’algoritmo è realizzato in modo da dividere le componenti di failure detection e di membership update, senza utilizzare il metodo heartbeat \cite{swim}:
 \begin{itemize}
@@ -254,7 +291,7 @@ L’algoritmo è realizzato in modo da dividere le componenti di failure detecti
 
 \textbf{Dissemination component} Se un nodo imposta un nodo come guasto, inizia a distribuire questa informazione a tutta la rete. La versione base del protocollo SWIM utilizza un sistema multicast, mentre una versione più robusta sfrutta il principio della diffusione delle epidemie, quindi i protocolli epidemici.
 \subsection{Riduzione dei fasi positivi}
-La versione base del protocollo SWIM rischia di aumentare il numero di nodi considerati guasti nel caso di perdita di pacchetti oppure per una temporanea disattivazione del nodo in questione. Per evitare questo problema viene introdotto protocollo  chiamato Suspicion protocol \cite{swim}: quando un nodo Mi non riceve informazioni da un nodo Mj, ne dai nodi che lo aiutano a contattarlo, imposta il nodo $M_j$ come Sospetto. Se un altro nodo riceve questa informazione, marca nella sua lista il nodo come sospetto.
+La versione base del protocollo SWIM rischia di aumentare il numero di nodi considerati guasti nel caso di perdita di pacchetti oppure per una temporanea disattivazione del nodo in questione. Per evitare questo problema viene introdotto protocollo  chiamato Suspicion protocol \cite{swim}: quando un nodo $M_i$ non riceve informazioni da un nodo Mj, ne dai nodi che lo aiutano a contattarlo, imposta il nodo $M_j$ come sospetto. Se un altro nodo riceve questa informazione, marca nella sua lista il nodo come sospetto.
 
 Se un nodo riesce a contattare un nodo sospetto, comincia ad inviare un messaggio \texttt{Alive($M_j$)}, il quale sovrascrive il sospetto di guasto. Quando un nodo rimane sospetto per un certo periodo di tempo, senza avere ulteriori informazioni, viene marcato come guasto in modo definitivo. Oltre allo stato di \texttt{Suspect/Alive/Confirm}(guasto), viene associato anche un contatore, generato in modo da gestire la successione di messaggi e la loro eventuale sovrascrittura all’interno della lista.
 
